@@ -9,7 +9,7 @@ rankall <- function(outcome, rank = "best") {
 	} else if (identical(outcome, "heart attack")) {
 		column <- 11	
 	} else if (identical(outcome, "heart failure")) {
-		column <- 35
+		column <- 17
 	} else  stop("invalid outcome")
 	
 	## Extract relevant columns from data and re-name for ease of use
