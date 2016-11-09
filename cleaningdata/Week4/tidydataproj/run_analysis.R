@@ -27,8 +27,8 @@ run_analysis <- function(dataDir = "."){
 	## Download and unzip the data set
 	dataURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
 	dataFile <- paste(rawPath, "/dataset.zip", sep = "" )
-	#download.file(dataURL,dataFile)
-	#unzip(dataFile, exdir = rawPath)
+	download.file(dataURL,dataFile)
+	unzip(dataFile, exdir = rawPath)
 	
 	
 	
@@ -97,10 +97,18 @@ run_analysis <- function(dataDir = "."){
 	## Filter out only the mean and standard deviation data along with Subjects/Labels column
 	filteredData <- select(allData,matches("Subject|Labels|.*mean.*|.*std.*"))
 
-	
-	
-	## Write data to file all nice and formatted to work with later
+	# Write data to file all nice and formatted to work with later
 	outfile <- paste(tidyPath, "/tidyUCRdata", sep = "")
 	write.table(filteredData, file = outfile)
+	
+	
+	
+	## Calculate means for all variables sorted by subject and activity
+	averagedData <- filteredData %>% group_by(Subject, Labels) %>% summarise_all(mean)
+
+	# Write data containining averages to file
+	outfile2 <- paste(tidyPath, "/tidyUCRdataMeans", sep = "")
+	write.table(averagedData, file = outfile2)
+	
 	
 }
