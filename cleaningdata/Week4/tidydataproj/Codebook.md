@@ -9,7 +9,7 @@ Full information about each variable and how it was obtained can be found in the
 ##Variables  
 All variables are normalized and bounded within [-1,1].  
   
-tBodyAcc_mean_X		range = [-1,1]  
+tBodyAcc_mean_X		      range = [-1,1]  
 Mean value of body acceleration in the X direction  
   
 tBodyAcc_mean_Y		range = [-1,1]  
