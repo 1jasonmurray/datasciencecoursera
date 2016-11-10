@@ -99,7 +99,7 @@ run_analysis <- function(dataDir = "."){
 
 	# Write data to file all nice and formatted to work with later
 	outfile <- paste(tidyPath, "/tidyUCIdata", sep = "")
-	write.table(filteredData, file = outfile)
+	write.table(filteredData, file = outfile, row.names = FALSE)
 	
 	
 	
@@ -108,7 +108,7 @@ run_analysis <- function(dataDir = "."){
 
 	# Write data containining averages to file
 	outfile2 <- paste(tidyPath, "/tidyUCIdataMeans", sep = "")
-	write.table(averagedData, file = outfile2)
+	write.table(averagedData, file = outfile2, row.names = FALSE)
 	
 	
 }
