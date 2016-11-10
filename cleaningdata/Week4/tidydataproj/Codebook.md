@@ -73,27 +73,27 @@ Standard deviation of gravity acceleration in the Z direction
 
 tBodyAccJerk_mean_X		
 range = [-1,1]      
-Mean of body jerk signal in X direction   Derived from body accelration and angular velocity in time    
+Mean of body jerk signal in X direction   Derived from body acceleration and angular velocity in time    
 
 tBodyAccJerk_mean_Y		
 range = [-1,1]  
-Mean of body jerk signal in Y direction   Derived from body accelration and angular velocity in time    
+Mean of body jerk signal in Y direction   Derived from body acceleration and angular velocity in time    
   
 tBodyAccJerk_mean_Z		
 range = [-1,1]  
-Mean of body jerk signal in Z direction   Derived from body accelration and angular velocity in time    
+Mean of body jerk signal in Z direction   Derived from body acceleration and angular velocity in time    
   
 tBodyAccJerk_std_X		
 range = [-1,1]  
-Standard deviation of body jerk signal in X direction   Derived from body accelration and angular velocity in time    
+Standard deviation of body jerk signal in X direction   Derived from body acceleration and angular velocity in time    
   
 tBodyAccJerk_std_Y		
 range = [-1,1]  
-Standard deviation of body jerk signal in Y direction   Derived from body accelration and angular velocity in time    
+Standard deviation of body jerk signal in Y direction   Derived from body acceleration and angular velocity in time    
   
 tBodyAccJerk_std_Z		
 range = [-1,1]  
-Standard deviation of body jerk signal in Z direction   Derived from body accelration and angular velocity in time    
+Standard deviation of body jerk signal in Z direction   Derived from body acceleration and angular velocity in time    
   
 tBodyGyro_mean_X		
 range = [-1,1]  
@@ -121,51 +121,51 @@ Standard deviration of magnitude of angular velocity in Z direction
   
 tBodyGyroJerk_mean_X		
 range = [-1,1]  
-Mean of body jerk angle in X direction   Derived from body accelration and angular velocity in time    
+Mean of body jerk angle in X direction   Derived from body acceleration and angular velocity in time    
   
 tBodyGyroJerk_mean_Y		
 range = [-1,1]  
-Mean of body jerk angle in Y direction   Derived from body accelration and angular velocity in time    
+Mean of body jerk angle in Y direction   Derived from body acceleration and angular velocity in time    
   
 tBodyGyroJerk_mean_Z		
 range = [-1,1]  
-Mean of body jerk angle in Z direction   Derived from body accelration and angular velocity in time    
+Mean of body jerk angle in Z direction   Derived from body acceleration and angular velocity in time    
   
 tBodyGyroJerk_std_X		
 range = [-1,1]  
-Standard deviation of body jerk angle in X direction   Derived from body accelration and angular velocity in time    
+Standard deviation of body jerk angle in X direction   Derived from body acceleration and angular velocity in time    
   
 tBodyGyroJerk_std_Y		
 range = [-1,1]  
-Standard deviation of body jerk angle in Y direction   Derived from body accelration and angular velocity in time    
+Standard deviation of body jerk angle in Y direction   Derived from body acceleration and angular velocity in time    
   
 tBodyGyroJerk_std_Z		
 range = [-1,1]  
-Standard deviation of body jerk angle in Z direction   Derived from body accelration and angular velocity in time    
+Standard deviation of body jerk angle in Z direction   Derived from body acceleration and angular velocity in time    
   
 tBodyAccMag_mean		
 range = [-1,1]  
-Mean of magnitude of body accelration   
+Mean of magnitude of body acceleration   
   
 tBodyAccMag_std		
 range = [-1,1]  
-Standard deviation of magnitude of body accelration   
+Standard deviation of magnitude of body acceleration   
   
 tGravityAccMag_mean		
 range = [-1,1]  
-Mean of magnitude of gravity accelration   
+Mean of magnitude of gravity acceleration   
   
 tGravityAccMag_std		
 range = [-1,1]  
-Standard deviation of magnitude of gravity accelration   
+Standard deviation of magnitude of gravity acceleration   
   
 tBodyAccJerkMag_mean		
 range = [-1,1]  
-Mean of body accelration jerk magnitude   
+Mean of body acceleration jerk magnitude   
   
 tBodyAccJerkMag_std		
 range = [-1,1]  
-Standard deviation of body accelration jerk magnitude   
+Standard deviation of body acceleration jerk magnitude   
   
 tBodyGyroMag_mean		
 range = [-1,1]  
@@ -341,19 +341,19 @@ Mean frequency of body gyro jerk magnitude
   
 angletBodyAccMean_gravity		
 range = [-1,1]  
-Mean accelration angle of body due to gravity  
+Mean acceleration angle of body due to gravity  
   
 angletBodyAccJerkMean_gravityMean		
 range = [-1,1]  
-Mean jerk accelration angle due to gravity  
+Mean jerk acceleration angle due to gravity  
   
 angletBodyGyroMean_gravityMean		
 range = [-1,1]  
-Mean body accelration angle due to gravity  
+Mean body acceleration angle due to gravity  
   
 angletBodyGyroJerkMean_gravityMean		
 range = [-1,1]  
-Mean body accelration jerk angle due to gravity  
+Mean body acceleration jerk angle due to gravity  
   
 angleX_gravityMean		
 range = [-1,1]  
