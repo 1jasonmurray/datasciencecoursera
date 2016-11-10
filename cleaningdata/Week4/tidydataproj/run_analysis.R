@@ -85,17 +85,17 @@ run_analysis <- function(dataDir = "."){
 	
 	
 	## Replace numeric labels with desciprtive names from activities index
-	Labels <- sapply(Labelsn$label, function(index) Labelsn$label <- activities[index, 2])
+	Activity <- sapply(Labelsn$label, function(index) Labelsn$label <- activities[index, 2])
 
 	
 	
-	##Merge all data into one frame with with cbind in the following order: Subjects, Labels, Data
-	allData <- cbind(Subjects, Labels, Data)
+	##Merge all data into one frame with with cbind in the following order: Subjects, Activity, Data
+	allData <- cbind(Subjects, Activity, Data)
 
 	
 	
-	## Filter out only the mean and standard deviation data along with Subjects/Labels column
-	filteredData <- select(allData,matches("Subject|Labels|.*mean.*|.*std.*"))
+	## Filter out only the mean and standard deviation data along with Subjects/Activity column
+	filteredData <- select(allData,matches("Subject|Activity|.*mean.*|.*std.*"))
 
 	# Write data to file all nice and formatted to work with later
 	outfile <- paste(tidyPath, "/tidyUCIdata", sep = "")
@@ -104,7 +104,7 @@ run_analysis <- function(dataDir = "."){
 	
 	
 	## Calculate means for all variables sorted by subject and activity
-	averagedData <- filteredData %>% group_by(Subject, Labels) %>% summarise_all(mean)
+	averagedData <- filteredData %>% group_by(Subject, Activity) %>% summarise_all(mean)
 
 	# Write data containining averages to file
 	outfile2 <- paste(tidyPath, "/tidyUCIdataMeans", sep = "")
