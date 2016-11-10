@@ -1,12 +1,12 @@
-<p align="center">#Tidied UCI HAR Dataset</p>
-##Introduction
+<p align="center">Tidied UCI HAR Dataset</p>
+###Introduction
 The following data set was obtained from http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones  
 The test and training data provided was combined into a single dataset.  Then only the mean and standard deviation for each measurment were filtered out.  Creating the tidyUCIdata set.  The means for each variable was then calculated by subject and activity.  These are stored in tidyUCIdataMeans.  The same variable names are used in both sets of data but in the tidyUCIdataMeans all variables represent the means of the variables from the original set of data.  
 
-##Features  
+###Features  
 Full information about each variable and how it was obtained can be found in the features.txt file which was included with the original data set.   
 
-##Variables  
+###Variables  
 All variables are normalized and bounded within [-1,1].  
   
 tBodyAcc_mean_X        range = [-1,1]  
