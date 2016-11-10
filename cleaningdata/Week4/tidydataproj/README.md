@@ -8,5 +8,5 @@ tidied - directory to store tidied data
 run_analysis.R - Script to download and clean data, takes one argument dataDir which will be used to store the raw and tidied data  
 README.md - This file  
 Codebook.md - File explaining all variables  
-tidied/tidyUCRdata - File containing cleaned data  
-tidied/tidyUCRdataMeans - File containing cleaned data Means summarized by subject and activity  
+tidied/tidyUCIdata - File containing cleaned data  
+tidied/tidyUCIdataMeans - File containing cleaned data Means summarized by subject and activity  

@@ -98,7 +98,7 @@ run_analysis <- function(dataDir = "."){
 	filteredData <- select(allData,matches("Subject|Labels|.*mean.*|.*std.*"))
 
 	# Write data to file all nice and formatted to work with later
-	outfile <- paste(tidyPath, "/tidyUCRdata", sep = "")
+	outfile <- paste(tidyPath, "/tidyUCIdata", sep = "")
 	write.table(filteredData, file = outfile)
 	
 	
@@ -107,7 +107,7 @@ run_analysis <- function(dataDir = "."){
 	averagedData <- filteredData %>% group_by(Subject, Labels) %>% summarise_all(mean)
 
 	# Write data containining averages to file
-	outfile2 <- paste(tidyPath, "/tidyUCRdataMeans", sep = "")
+	outfile2 <- paste(tidyPath, "/tidyUCIdataMeans", sep = "")
 	write.table(averagedData, file = outfile2)
 	
 	
