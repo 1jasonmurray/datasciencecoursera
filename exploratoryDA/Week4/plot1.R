@@ -28,7 +28,9 @@ plot1 <- function(){
 
 	plot(plotData$year, plotData$`yearTotal <- sum(Emissions)/1e+06`, 
 	     type = "b", pch = 16, col = "blue", 
-	     xlab = "Year",ylab = "PM2.5  Emissions (millions of tons)", main = "PM2.5  Emissions 1999-2008")
+	     xlab = "Year",ylab = "PM2.5 Emissions (millions of tons)", main = "PM2.5 Emissions 1999-2008 US")
+	abline(lm(plotData$`yearTotal <- sum(Emissions)/1e+06` ~ plotData$year), lty = "dashed", col = "red" )
+	legend("topright", c("PM2.5", "Trend"), col = c("blue","red"), lty = c("solid", "dashed"))
 	
 	dev.off()
 	

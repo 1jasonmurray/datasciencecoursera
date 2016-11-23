@@ -1,0 +1,48 @@
+plot3 <- function(){
+	
+	library(dplyr)
+	library(ggplot2)
+	
+	## The purpose of this function is to generate a plot of total PM2.5
+	## emissions by type from 1999-2008 in Baltimore to show the overall trend
+	
+	
+	## Define directories for source data and output plots
+	dataDir <- "./data"
+	plotDir <- "./plots"
+	
+	## Read in data
+	NEIdata <- paste(dataDir, "/summarySCC_PM25.rds", sep = "")
+	SCCdata <- paste(dataDir, "/Source_Classification_Code.rds", sep = "")
+	
+	NEI <- readRDS(NEIdata)
+	SCC <- readRDS(SCCdata)
+	
+	## Convert type variable to factor
+	NEI$type <- as.factor(NEI$type)
+	
+	## Group data by year, type, convert to thousands of tons
+	plotData <- NEI %>% 
+		filter(fips==24510) %>%
+		group_by(type,year) %>% 
+		summarise(sum(Emissions))
+	#update names
+	names(plotData) <- c("Type", "Year", "Emissions")
+	
+	
+	## Plot the data and save as png
+	plot3File <- paste(plotDir,"/plot3.png", sep = "")
+	png(plot3File, width = 858, height = 602)
+
+	p3 <- ggplot(plotData, aes(Year, Emissions, color = Type)) +
+		geom_point() +
+		geom_line() +
+		geom_smooth(method = "lm", se = FALSE, lty = "dashed", aes(colour = "Trend line")) +
+		facet_grid(. ~ Type) +
+		labs(y = "Emissions (tons)", title = "PM2.5 Emissions by type 1999-2008 Baltimore") 
+	
+	print(p3)
+	dev.off()
+	
+	
+}
