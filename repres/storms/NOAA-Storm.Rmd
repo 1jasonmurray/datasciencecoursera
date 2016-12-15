@@ -1,0 +1,406 @@
+---
+title: "Human and Economic Impact of Weather Events"
+author: "Jason Murray"
+date: '2016-12-09'
+output: html_document
+---
+<br>
+
+***
+
+##Required Libraries
+```{r libraries, message=FALSE}
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(mice)
+library(reshape2)
+library(pander)
+library(scales)
+```
+<br>
+
+***
+
+##Synopsis
+<br>
+The purpose of this analysis is to determine what whether event types have the greatest human health and economic impact.  We will use the NOAA storm data for this analysis.  The NOAA data goes back to 1950.  However, in the beginning they were only tracking tornado data with other categories gradually being added.  It wasn't until 1996 that all events were included so we will be focusing our analysis on 1996 to present.  Quite a bit of data cleaning was involved in completing this analysis, all of which is fully documented below.
+
+After completing this analysis it is clear that tornadoes, excessive heat, and floods cause the greatest impact to human health.  For economic impact; flood, hurricane, and storm surge top the list.  There is one notable exception.  If we look at crop damage seperate from property drought has the greatest impact.    
+
+<br>
+
+***
+
+##Data Processing
+<br>
+
+####Data download and import
+```{r getData}
+fileURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+filename <- "./data/StormData.csv.bz2"
+download.file(fileURL, filename)
+stormData <- read.csv(filename, stringsAsFactors = FALSE)
+```
+<br>
+
+####First look and processing
+
+First let's take a look at the columns in our data set.
+```{r names}
+names(stormData)
+```
+<br>
+
+####Column filtering
+We are only exploring 2 questions in this analysis.  So let's go ahead and filter out the columns that will be relevant to either population health or economic consequences.  The basic columns we need to keep are (STATE__, STATE, BGN_DATE, BGN_TIME, EVTYPE, END_DATE, END_TIME).  For population health their are 2 relevant columns (FATALITIES, INJURIES).  For the ecomomic consequences there are a few columns all containing "DMG".  Let's filter the rest out.  
+
+
+```{r filterColumn}
+##Build list of colummsn to keep
+##basic - using BGN_DATE as Date, BGN_TIME as well as duration(END_DATE/TIME) are not relevant for this analysis
+colsToKeep <- c("STATE__","STATE","BGN_DATE", "EVTYPE")
+##health
+colsToKeep <- c(colsToKeep, "FATALITIES", "INJURIES")
+##economic
+colsToKeep <- c(colsToKeep, "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")
+
+##filter them
+stormData <- select(stormData, one_of(colsToKeep))
+```
+<br>
+
+Now let's take a look at our remaining columns and their classes
+
+```{r lookClass}
+str(stormData)
+```
+<br>
+
+BGN_DATE is currently character, let's convert to date.
+```{r convertDate}
+stormData$BGN_DATE <- mdy_hms(stormData$BGN_DATE)
+```
+<br>
+
+When they started recording in 1950 they were only tracking tornadoes.  Over the years they gradually increased what was being tracked.  According to the information provided it wasn't until 1996 that everything was being included.  So if we use data before 1996 it makes our analysis questionable as it will be weighted towards events that started being recorded earlier.  So let's filter out everything previous to 1996 for this analysis.
+
+```{r}
+stormData <- filter(stormData,BGN_DATE > ymd("1996-01-01"))
+```
+<br>
+
+In this analysis we are only concerned with health and property damage.  If the numbers in these columns are all 0 we can filter out those rows as well since they won't affect the analysis.  Let's do that now.
+
+```{r}
+stormData <- filter(stormData, FATALITIES > 0 | INJURIES > 0 | PROPDMG > 0 | CROPDMG > 0)
+```
+<br>
+
+####Collapsing the DMG columns
+The damage columns are broken in to two pieces.  One with the significant digits and the other with magnitude(K = thousands, M = Millions, B=Billions).  In order to ease later analysis let's remove the EXP columns and change the DMG columns to reflect the full value.
+
+We can do this by multiplying the DMG column by the appropriate exponent based on the letter code.
+```{r}
+## First let's replace the character values in the EXP columns with a number.
+value <- c(K=1000,M=1e+06,B=1e+09)
+stormData$PROPDMGEXP <- value[stormData$PROPDMGEXP]
+stormData$CROPDMGEXP <- value[stormData$CROPDMGEXP]
+
+## This changed missing values to NA, replace NA values with the number 1
+stormData$PROPDMGEXP <- ifelse(is.na(stormData$PROPDMGEXP),1,stormData$PROPDMGEXP)
+stormData$CROPDMGEXP <- ifelse(is.na(stormData$CROPDMGEXP),1,stormData$CROPDMGEXP)
+
+## Then we can mutate the columns by multiplying them and remove the EXP columns
+stormData <- mutate(stormData, PROPDMG = PROPDMG * PROPDMGEXP, CROPDMG = CROPDMG*CROPDMGEXP) %>% 
+	     select(-PROPDMGEXP, -CROPDMGEXP)
+```
+<br>
+
+
+####Dealing with Event Type
+<br>
+
+The last field we should take a look at is EVTYPE.  Let's see how many unique entries there are
+```{r lookEVTYPE}
+length(unique(stormData$EVTYPE))
+```
+
+That's a lot of unique entries.  This field could be a challenge.  The writeup on the data only shows 48 possible 
+event types.
+<br>
+<br>
+
+Let's force everything to lower case to see if this clears any duplicates up. 
+
+```{r}
+stormData$EVTYPE <- tolower(stormData$EVTYPE)
+length(unique(stormData$EVTYPE))
+```
+
+So that helped a little. Let's take a look at some values to see what else the problem may be.
+```{r}
+head(unique(stormData$EVTYPE), 50)
+```
+<br>
+
+I see that at least some hurricane entries include the name which we are not concerned with.  I also see that there are multiple entries in some fields seperated by a "/". Let's substitue hurricane for any field that contains hurricane.  This will eliminate the names as well as any multiple entries that contain hurricane.  If a hurricane was one of the causes I think we can consider it the more important one(i.e. "hurricane opal/high winds" as hurricane).  Also, a typhoon is the same as a hurricane.  So we can replace typhoon with hurricane at the same time.  
+
+```{r}
+stormData$EVTYPE <-  ifelse(grepl("hurricane|typhoon",stormData$EVTYPE), "hurricane", stormData$EVTYPE)
+length(unique(stormData$EVTYPE))
+```
+<br>
+
+Now let's see what's left
+
+```{r}
+unique(stormData$EVTYPE)
+```
+<br>
+
+#####For the remaining values if there is an obvious mapping between the non-stnadard EVTYPE and a standard one, we will replace them
+<br>
+
+
+There are many entries referring to thunderstorm wind in different formats.  Let's standardize these.
+```{r}
+stormData$EVTYPE <- ifelse(grepl("tstm|thunderstorm",stormData$EVTYPE), "thunderstorm wind", stormData$EVTYPE)
+```
+<br>
+
+There is only one type of fire on the list, let's standardize these.
+```{r}
+stormData$EVTYPE <- ifelse(grepl("fire",stormData$EVTYPE), "wildfire", stormData$EVTYPE)
+```
+<br>
+
+Slides should all be debris flow
+```{r}
+stormData$EVTYPE <- ifelse(grepl("slide",stormData$EVTYPE), "debris flow", stormData$EVTYPE)
+```
+<br>
+
+Lot's of flash floods written in different ways.  Let's fix that
+```{r}
+stormData$EVTYPE <- ifelse(grepl("flash",stormData$EVTYPE), "flash flood", stormData$EVTYPE)
+```
+<br>
+
+Same thing with coastal flooding.
+```{r}
+stormData$EVTYPE <- ifelse(grepl("coastal",stormData$EVTYPE), "coastal flooding", stormData$EVTYPE)
+```
+<br>
+
+All flood entries other than lakeshore, coastal, and flash should just be flood.  Also, include fld as flood
+```{r}
+stormData$EVTYPE <- ifelse(grepl("flood|fld",stormData$EVTYPE) & !grepl("lakeshore|flash|coastal",stormData$EVTYPE), "flood", stormData$EVTYPE)
+```
+<br>
+
+Surf is referred to in a few diffrent ways
+```{r}
+stormData$EVTYPE <- ifelse(grepl("surf",stormData$EVTYPE), "heavy surf", stormData$EVTYPE)
+```
+<br>
+
+Frost and freeze are referred to in multiple ways
+```{r}
+stormData$EVTYPE <- ifelse(grepl("frost|freeze",stormData$EVTYPE), "frost/freeze", stormData$EVTYPE)
+```
+<br>
+
+Same with lake effect snow.  
+```{r}
+stormData$EVTYPE <- ifelse(grepl("lake",stormData$EVTYPE) & grepl("snow",stormData$EVTYPE), "lake-effect snow", stormData$EVTYPE)
+```
+<br>
+
+There is only one type of hail entry
+```{r}
+stormData$EVTYPE <- ifelse(grepl("hail",stormData$EVTYPE), "hail", stormData$EVTYPE)
+```
+<br>
+
+... and for rain 
+```{r}
+stormData$EVTYPE <- ifelse(grepl("rain",stormData$EVTYPE), "heavy rain", stormData$EVTYPE)
+```
+<br>
+
+... and for snow as well
+```{r}
+stormData$EVTYPE <- ifelse(grepl("snow",stormData$EVTYPE), "heavy snow", stormData$EVTYPE)
+```
+<br>
+
+There are only two types of fog, so if it isn't freezing call it fog.
+```{r}
+stormData$EVTYPE <- ifelse(grepl("fog",stormData$EVTYPE) & !grepl("freezing",stormData$EVTYPE), "fog", stormData$EVTYPE)
+```
+<br>
+
+All cold that isn't extreme should be cold/wind chill
+```{r}
+stormData$EVTYPE <- ifelse(grepl("cold",stormData$EVTYPE) & !grepl("extreme",stormData$EVTYPE), "cold/wind chill", stormData$EVTYPE)
+```
+<br>
+
+Same with heat for excessive
+```{r}
+stormData$EVTYPE <- ifelse(grepl("heat",stormData$EVTYPE) & !grepl("excessive",stormData$EVTYPE), "heat", stormData$EVTYPE)
+```
+<br>
+
+Storm surge should be standardized
+```{r}
+stormData$EVTYPE <- ifelse(grepl("surge",stormData$EVTYPE), "storm surge/tide", stormData$EVTYPE)
+```
+<br>
+
+So should high winds
+```{r}
+stormData$EVTYPE <- ifelse(grepl("high",stormData$EVTYPE) & grepl("wind",stormData$EVTYPE), "high wind", stormData$EVTYPE)
+```
+<br>
+
+
+The remaining non-standard EVTYPEs had no clear mapping to a standard one.  I think they can be safely ignored as long as they don't come up near the top of our list.  If they do we will have to revisit this.  
+<br>
+
+***
+
+
+##Results
+<br>
+
+####Human health impact
+The first question we are looking at is which types of events are the most harmful in regards to population health.  The data set provided has information on the number of fatalities and injuries caused by the event.  Fatalities should perhaps carry more weight but let's look at both individually and combined.  It should be noted that both counts reflect direct and indirect causes.
+<br>
+
+First let's take a look at the top 10 weather events that caused fatalaties.  
+
+```{r procFatal}
+fatal <- stormData %>% 
+	group_by(EVTYPE) %>% 
+	summarise(fatalities = sum(FATALITIES))%>% 
+	arrange(desc(fatalities))
+fatal_10 <- head(fatal,10)
+pander(fatal_10)
+```
+
+So it appears that tornadoes, excessive heat, and flash flooding are the number #1 causes of fatalities
+<br>
+<br>
+
+
+Now let's take a look at injuries.
+```{r procInjury}
+injury <- stormData %>% 
+	group_by(EVTYPE) %>% 
+	summarise(injuries = sum(INJURIES))%>% 
+	arrange(desc(injuries))
+injury_10 <- head(injury,10)
+pander(injury_10)
+```
+
+Here, once again tornadoes and excessive heat top the list with flood replacing flash flood.  
+<br>
+
+Combining them together with fatalities as the primary key we get the following
+```{r}
+fic <- stormData %>% 
+	group_by(EVTYPE) %>% 
+	summarise(Injuries = sum(INJURIES), Fatalities = sum(FATALITIES))%>% 
+	mutate(Combined = Injuries + Fatalities) %>% 
+	arrange(desc(Combined))
+fic_10 <- head(fic,10)
+pander(fic_10)
+```
+<br>
+
+Let's rearrange the data and graph this to get a clearer picture.
+```{r}
+##Melt and rearrange for ease of graphing
+fic_10m <- melt(fic_10, id = c("EVTYPE","Combined")) %>% select(Event = EVTYPE, class = variable, count = value)
+
+##Now plot the data
+ggplot(data=fic_10m) +
+	geom_bar(stat="identity", aes(x=reorder(Event,-count), y=count, fill = class)) +
+	coord_flip() +
+	labs(x = "Weather Event", y = "Fatalities/Injuries")
+```
+<br>
+
+It looks like tornadoes, excessive heat, and flooding cause the greatest impact to health in the US.  
+<br>
+
+#### Economic impact
+The second question we are examing is which types of events have the greatest economic impact.  The data provided includes information on both property and crop damage.  We will use this to determine which events have the greatest impact on the economy.  
+<br>
+
+Let's look at property damage first.
+
+```{r}
+property <- stormData %>% 
+	group_by(EVTYPE) %>% 
+	summarise(propertyDamage = sum(PROPDMG))%>% 
+	arrange(desc(propertyDamage))
+property_10 <- head(property,10)
+property_10$propertyDamage <- dollar(property_10$propertyDamage) 
+pander(property_10)
+```
+
+So flood, hurricane and storm surge top the list for property damage.
+<br>
+<br>
+
+Let's see what crop damage looks like
+```{r}
+crops <- stormData %>% 
+	group_by(EVTYPE) %>% 
+	summarise(cropDamage = sum(CROPDMG))%>% 
+	arrange(desc(cropDamage))
+crops_10 <- head(crops,10)
+crops_10$cropDamage <- dollar(crops_10$cropDamage)
+pander(crops_10)
+```
+We get similar result with the notable exception that drought tops the list for crop damage.  
+<br>
+
+If we combine them we get the following
+```{r}
+pcc <- stormData %>% 
+	group_by(EVTYPE) %>% 
+	summarise(propertyDamage = sum(PROPDMG), cropDamage = sum(CROPDMG))%>% 
+	mutate(Combined = propertyDamage + cropDamage) %>% 
+	arrange(desc(Combined))
+pcc_10 <- head(pcc,10)
+##Create copy of variable to format as currency in the table.
+pcc_10o <- pcc_10
+pcc_10o$cropDamage <- dollar(pcc_10o$cropDamage)
+pcc_10o$propertyDamage <- dollar(pcc_10o$propertyDamage)
+pcc_10o$Combined <- dollar(pcc_10o$Combined)
+pander(pcc_10o)
+```
+<br>
+
+Let's graph this and take a look
+```{r}
+##Melt and rearrange for ease of graphing
+pcc_10m <- melt(pcc_10, id = c("EVTYPE","Combined")) %>% select(Event = EVTYPE, class = variable, count = value)
+
+##Now plot the data
+ggplot(data=pcc_10m) +
+	geom_bar(stat="identity", aes(x=reorder(Event,-count), y=count/1e+09, fill = class)) +
+	coord_flip() +
+	labs(x = "Weather Event", y = "Property/Crop Damage (Billions)")
+```
+<br>
+
+So combined flood, hurricane, storm surge are the worst cuplprits.  It should be noted as well that property damage makes up the largest part of the economic impact.  Not only overall but in every category except drought.  So if we are looking at just crop damage this is an important point.
+
+
+
+
