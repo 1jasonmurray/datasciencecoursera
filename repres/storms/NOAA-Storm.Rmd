@@ -8,8 +8,18 @@ output: html_document
 
 ***
 
+##Synopsis
+<br>
+
+The purpose of this analysis is to determine what whether event types have the greatest human health and economic impact.  We will use the NOAA storm data for this analysis.  The NOAA data goes back to 1950.  However, in the beginning they were only tracking tornado data with other categories gradually being added.  It wasn't until 1996 that all events were included so we will be focusing our analysis on 1996 to present.  Quite a bit of data cleaning was involved in completing this analysis, all of which is fully documented below.
+
+After completing this analysis it is clear that tornadoes, excessive heat, and floods cause the greatest impact to human health.  For economic impact; flood, hurricane, and storm surge top the list.  There is one notable exception.  If we look at crop damage seperate from property drought has the greatest impact.    
+<br>
+
+***
+
 ##Required Libraries
-```{r libraries, message=FALSE}
+```{r libraries, message=FALSE, warning=FALSE}
 library(dplyr)
 library(lubridate)
 library(ggplot2)
@@ -18,16 +28,6 @@ library(reshape2)
 library(pander)
 library(scales)
 ```
-<br>
-
-***
-
-##Synopsis
-<br>
-The purpose of this analysis is to determine what whether event types have the greatest human health and economic impact.  We will use the NOAA storm data for this analysis.  The NOAA data goes back to 1950.  However, in the beginning they were only tracking tornado data with other categories gradually being added.  It wasn't until 1996 that all events were included so we will be focusing our analysis on 1996 to present.  Quite a bit of data cleaning was involved in completing this analysis, all of which is fully documented below.
-
-After completing this analysis it is clear that tornadoes, excessive heat, and floods cause the greatest impact to human health.  For economic impact; flood, hurricane, and storm surge top the list.  There is one notable exception.  If we look at crop damage seperate from property drought has the greatest impact.    
-
 <br>
 
 ***
