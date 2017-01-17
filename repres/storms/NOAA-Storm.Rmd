@@ -308,7 +308,7 @@ pander(injury_10)
 Here, once again tornadoes and excessive heat top the list with flood replacing flash flood.  
 <br>
 
-Combining them together with fatalities as the primary key we get the following
+Combining them together with the combined total as the primary key we get the following
 ```{r}
 fic <- stormData %>% 
 	group_by(EVTYPE) %>% 

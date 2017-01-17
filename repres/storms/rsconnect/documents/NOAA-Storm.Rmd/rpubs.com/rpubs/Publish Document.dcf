@@ -3,5 +3,5 @@ account: rpubs
 server: rpubs.com
 appId: https://api.rpubs.com/api/v1/document/235585/c2b4f80bc72346e5b954fc6b3e803d01
 bundleId: https://api.rpubs.com/api/v1/document/235585/c2b4f80bc72346e5b954fc6b3e803d01
-url: http://rpubs.com/publish/claim/235585/a5c36fcf1cb041afb39a6684399d5308
-when: 1481832858.73207
+url: http://rpubs.com/jasonmurray/235585
+when: 1481837772.29194

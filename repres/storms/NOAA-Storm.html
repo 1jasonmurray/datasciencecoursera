@@ -549,7 +549,7 @@ pander(injury_10)</code></pre>
 </table>
 <p>Here, once again tornadoes and excessive heat top the list with flood replacing flash flood.<br />
 <br></p>
-<p>Combining them together with fatalities as the primary key we get the following</p>
+<p>Combining them together with the combined total as the primary key we get the following</p>
 <pre class="r"><code>fic &lt;- stormData %&gt;% 
     group_by(EVTYPE) %&gt;% 
     summarise(Injuries = sum(INJURIES), Fatalities = sum(FATALITIES))%&gt;% 
