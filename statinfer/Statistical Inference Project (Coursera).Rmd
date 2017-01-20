@@ -92,4 +92,31 @@ ggplot() +
 ```
 
 
-This is because of the central limit theorem.  Regardless of how the original data is distributed the distribution of the means of samples approaches a normal distribution centered at the mean of the population as the sample size get's larger.  I changed the y axis to density above and overlayed a normal curve to show this.     
+This is because of the central limit theorem.  Regardless of how the original data is distributed the distribution of the means of samples approaches a normal distribution centered at the mean of the population as the sample size get's larger.  I changed the y axis to density above and overlayed a normal curve to show this.  
+
+
+#Part 2 - Tooth Growth Data Analysis
+
+Let's load up the Tooth Growth dataset and do some exploration
+```{r}
+str(ToothGrowth)
+summary(ToothGrowth)
+##Not too many observations, let's look at the whole set
+ToothGrowth
+```
+
+So we have 60 observations across 3 variables.  Looks like it's broken into 2 groups OJ and VC. 
+
+Looking up the help page it looks like this was from a study done with 60 guinea pigs so they were all unique subjects.  
+
+The first column (len) is defined as numeric Tooth length.  I'm assuming this is a differential from the original measured length at the conclusion of the study.  It's not really clear from the description of the data.  It also doesn't include the units of the measurement.  
+
+The second column(supp) is the type of supplment used, so they gave half of the subjects vitamin C as absorbic acid (VC) and half in the form of orange juice (OJ).  
+
+The final column(dose) is the dosage in milligrams/day.  This is the amount of vitamin C regarldess of of the supplement used.  They were 3 groups per supplement consisting of .5, 1, 2 mg/day dosages.
+
+
+
+
+
+
