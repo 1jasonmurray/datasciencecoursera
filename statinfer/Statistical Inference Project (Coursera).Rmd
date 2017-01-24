@@ -74,7 +74,7 @@ We have so far been looking at the distribution of sample means but what does th
 
 Let's sample a 1000 random variables from the exponential function and see how they are distributed 
 
-```{r, fig.height=3.75, fig.width=7}
+```{r, fig.height=3.5, fig.width=7}
 re1000 <- rexp(1000, rate = .2)
 ggplot() + 
 	aes(re1000) +
@@ -82,9 +82,9 @@ ggplot() +
 	labs(x = "Random Exponential Function Samples", y = "Count")
 ```
 
-So why does the distribution of 1000 means of 40 samples look different than 1000 samples?
+So why does the distribution of 1000 means of 40 samples look different than 1000 sample values?
 
-```{r, fig.height=3.75, fig.width=7}
+```{r, fig.height=3.5, fig.width=7}
 ggplot() + 
 	aes(re1000m) +
 	geom_histogram(aes(y=..density..),binwidth = .25, fill = "light blue 3", color = "black") +
@@ -93,7 +93,7 @@ ggplot() +
 ```
 
 
-This is because of the central limit theorem.  Regardless of how the original data is distributed the distribution of the means of samples approaches a normal distribution centered at the mean of the population as the sample size get's larger.  I changed the y axis to density above and overlayed a normal curve to show this.  
+This is because of the central limit theorem.  Regardless of how the original data is distributed the distribution of the means of samples approaches a normal distribution centered at the mean of the population as the sample size get's larger.  I changed the y axis to density above and overlayed a normal curve to show that the shape of the distribution of means is approaching normal.  
 
 
 #Part 2 - Tooth Growth Data Analysis
@@ -182,7 +182,26 @@ TG_2 <- filter(ToothGrowth, dose == 2.0)
 
 In this case we are looking to see if by increasing the dose we also increase tooth growth.  We will use a one sided t-test between each dosage level to see if there is a significant increase.
 
-Our null hypothesis in this case is that the length
+Our null hypothesis in this case is that the mean of the length will not change with dose.  
+
+First let's compare .5 to 1.0
+```{r}
+t.test(TG_1$len, TG_.5$len, alternative = "greater")
+```
+
+So based on a pvalue of 6.342e-08 we can definately reject the null hypothesis here.  
+
+Let's take a look at 1.0 vs 2.0 now
+```{r}
+t.test(TG_2$len, TG_1$len, alternative = "greater")
+```
+
+This difference in dose has a p-value of 9.532e-06.  So we can reject our null hypothese based on this change in dosage as well.
+
+##Conclusions
+
+From our hypothesis testing we can conclude that although there does appear to be some difference between supplement type, it is not enough of a difference to be considered significant.  When it comes to dosage there is a much clearer correlation and we can safely say that increasing dosage does increase tooth growth. 
+
 
 
 
