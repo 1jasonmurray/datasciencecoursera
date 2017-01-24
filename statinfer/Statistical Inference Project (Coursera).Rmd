@@ -44,7 +44,7 @@ Which is very close to the theoretical value of 5.
 
 Let's graph the distribution of our sample means and so we can see how close.  
 
-```{r}
+```{r, fig.height=3.5, fig.width=7}
 ggplot() + 
 	aes(re1000m) +
 	geom_histogram(binwidth = .25, fill = "light blue 3", color = "black") +
@@ -96,122 +96,5 @@ ggplot() +
 This is because of the central limit theorem.  Regardless of how the original data is distributed the distribution of the means of samples approaches a normal distribution centered at the mean of the population as the sample size get's larger.  I changed the y axis to density above and overlayed a normal curve to show that the shape of the distribution of means is approaching normal.  
 
 
-#Part 2 - Tooth Growth Data Analysis
-
-##Initial Exploration
-Let's load up the Tooth Growth dataset and do some exploration
-```{r}
-str(ToothGrowth)
-summary(ToothGrowth)
-```
-
-So we have 60 observations across 3 variables.  Looks like it's broken into 2 groups OJ and VC. 
-
-Looking up the help page it looks like this was from a study done with 60 guinea pigs so they were all unique subjects.  
-
-The first column (len) is defined as numeric Tooth length.  I'm assuming this is a differential from the original measured length at the conclusion of the study.  It's not really clear from the description of the data but for our analysis I don't think it relevant.  It also doesn't include the units of the measurement.  
-
-The second column(supp) is the type of supplment used, so they gave half of the subjects vitamin C as absorbic acid (VC) and half in the form of orange juice (OJ).  
-
-The final column(dose) is the dosage in milligrams/day.  This is the amount of vitamin C regarldess of of the supplement used.  They were 3 groups per supplement consisting of .5, 1, 2 mg/day dosages.
-
-
-
-Let's do a boxplot to compare the to delivery methods to see if it look there is an obvious difference in the application method.  
-
-```{r, fig.height=3.75, fig.width=7}
-ggplot(data = ToothGrowth, aes(factor(supp),len)) + 
-	geom_boxplot()
-```
-
-So intially it looks like OJ might have a larger effect on toothgrowth.  Let's look at the data by dosage and supplement type and do some smoothing
-
-```{r, fig.height=3.75, fig.width=7, message=FALSE, warning=FALSE}
-ggplot(data = ToothGrowth, aes(dose, len, color = supp)) +
-	geom_point() +
-	geom_smooth(se = FALSE)
-```
-
-Looking at this it's less clear that one is more effective than the other.  At lower doses it does appear that OJ results in more tooth growth.  However at the full dosage of 2mg/day they appear to be nearly equal. 
-
-
-##Hypothesis testing
-
-Now that we've done some inital exploration let's get down to the hypothesis testing.  I will examine 2 questions here.  Is the type of supplement a factor in tooth growth?  Does increasing dosage increase growth?
-
-
-###Supplement type effect
-First let's split the data in to 2 sets based on the supplement type.   
-```{r}
-TG_OJ <- filter(ToothGrowth, supp == 'OJ')
-TG_VC <- filter(ToothGrowth, supp == 'VC')
-```
-
-Let's use a 2 sided t-test to see if there is a difference between the supplements across all dose levels.  Our null hypothese will be
-
-$H_0:\mu_v = \mu_o$ 
-
-that the mean of length will be the same for both supplements.  
-
-
-
-The alternative hypothesis in this case
-
-$H_A:\mu_v != \mu_o$
-
-that the mean of the length is different for the supplements.  
-
-
-We will use $\alpha = .05$ for our testing. 
-
-```{r}
- t.test(TG_OJ$len, TG_VC$len)
-```
-
-So the p-value here is .061, based on this we can't reject our null hypothesis.  Meaning that the there is not enough a difference between the 2 supplements to say one is more effective at producing tooth growth.
-
-### Dosage Effect
-
-Let's start by breaking our original data into 3 pieces based on dosage so we can compare between them.  
-
-```{r}
-TG_.5 <- filter(ToothGrowth, dose == 0.5)
-TG_1 <- filter(ToothGrowth, dose == 1.0)
-TG_2 <- filter(ToothGrowth, dose == 2.0)
-```
-
-In this case we are looking to see if by increasing the dose we also increase tooth growth.  We will use a one sided t-test between each dosage level to see if there is a significant increase.
-
-Our null hypothesis in this case is that the mean of the length will not change with dose.  
-
-First let's compare .5 to 1.0
-```{r}
-t.test(TG_1$len, TG_.5$len, alternative = "greater")
-```
-
-So based on a pvalue of 6.342e-08 we can definately reject the null hypothesis here.  
-
-Let's take a look at 1.0 vs 2.0 now
-```{r}
-t.test(TG_2$len, TG_1$len, alternative = "greater")
-```
-
-This difference in dose has a p-value of 9.532e-06.  So we can reject our null hypothese based on this change in dosage as well.
-
-##Conclusions
-
-From our hypothesis testing we can conclude that although there does appear to be some difference between supplement type, it is not enough of a difference to be considered significant.  When it comes to dosage there is a much clearer correlation and we can safely say that increasing dosage does increase tooth growth. 
-
-
-
-
-
-\newpage
-#Appendix
-
-#### Full ToothGrowth dataset
-```{r}
-ToothGrowth
-```
 
 
