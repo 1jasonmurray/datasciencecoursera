@@ -1,0 +1,106 @@
+---
+title: "Motor Trend Analysis"
+author: "Jason Murray"
+date: '2017-02-14'
+output: pdf_document
+---
+
+##Summary	
+
+In this analysis we will be using the Motor Trend data from 1974 that we are all familiar with by now to explore a few questions.
+
+- Is an automatic or manual transmission better for MPG?
+- Quantify the difference between automatic and manual transmissions.
+
+
+
+##Data Load and Exploration
+
+####Required libraries
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+```
+
+First let's load up the data
+```{r}
+data(mtcars)
+str(mtcars)
+```
+
+
+
+For some quick initial exploration a histogram of MPG for automatic and manual transmissions might be interesting
+
+```{r, fig.width=7, fig.height=2.5}
+#Change am to a factor variable and names for the levels
+mtcars$am <- as.factor(mtcars$am)
+levels(mtcars$am) <- c("automatic", "manual")
+
+ggplot(data=mtcars) +
+	geom_histogram(aes(x=mpg, fill=am), bins = 25 ) +
+	facet_grid(am ~ .)
+```
+
+
+So initially it looks like manual transmissions may lead to better MPG, but let's dig deeper there could be a lot of other factors influencing this.
+
+##Building some models to compare
+
+From the data description.  We have the following variables:
+
+[, 1]	mpg	Miles/(US) gallon  
+[, 2]	cyl	Number of cylinders  
+[, 3]	disp	Displacement (cu.in.)  
+[, 4]	hp	Gross horsepower  
+[, 5]	drat	Rear axle ratio  
+[, 6]	wt	Weight (1000 lbs)  
+[, 7]	qsec	1/4 mile time  
+[, 8]	vs	V/S  
+[, 9]	am	Transmission (0 = automatic, 1 = manual)  
+[,10]	gear	Number of forward gears  
+[,11]	carb	Number of carburetors  
+
+
+Looking at this list I would pick the following variables as having a potential influence on mpg; cyl, disp, hp, drat, wt.  Let's build some models and compare them with anova before looking at tranmission types influence.  
+
+```{r}
+##Starting with weight as it is highly likely to have a strong influence an adding from there.
+fit1 <- lm(mpg ~ wt, mtcars)
+fit2 <- lm(mpg ~ wt + cyl, mtcars)
+fit3 <- lm(mpg ~ wt + cyl + disp, mtcars)
+fit4 <- lm(mpg ~ wt + cyl + disp + hp, mtcars)
+fit5 <- lm(mpg ~ wt + cyl + disp + hp + drat, mtcars)
+
+## Model comparison
+anova(fit1, fit2, fit3, fit4, fit5)
+```
+
+I started with weight in the initial model and then added potential regressors 1 by 1.  From a physics point of view weight has to influence mpg.  Reviewing the models above it looks like adding cyl improved the model but all the additional variables after that didn't add any new insight.  I would select model 2 as being the best fit from this group based on this.
+
+Let's look at the residuals for this model and see if there is anything out of the ordinary. 
+
+```{r, fig.width=7, fig.height=6.75}
+par(mfrow = c(2, 2)) 
+plot(fit2)
+```
+
+So nothing here to indicate that our choosen model has any significant flaws.  
+
+##Transmission type influence
+Now let's get back to our original question, is an automatic or manual transmission better for MPG.  Let's build on our second model by adding in the tranmission type and comparing it to the model without it.
+
+```{r}
+fit_am <- lm(mpg ~ wt + cyl + am, mtcars)
+summary(fit_am)
+anova(fit2, fit_am)
+```
+
+So comparing this new model with anova to our best fit without transmission type we see almost no change in RSS and a very low F score.  Looking at our summary for the model with the tranmission included we can also see that the t value for tranmission is quite low.  Even the Std. Error for it is significantly larger than the coefficient.  So adding in tranmission type did almost nothing to improve our model
+
+##Conclusion
+
+Looking at the data it appears that weight and the number of cylinders have the largest influence on MPG.  Adding in tranmission type did nothing to improve our model.  From this we can conclude that the tranmission type does not influence MPG one way or the other.  
+
+
+
+
