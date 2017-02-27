@@ -1,0 +1,38 @@
+---
+title: "HAR - Correct Dumbbell Curl"
+author: "Jason Murray"
+date: '2017-02-27'
+output: html_document
+---
+
+##Summary
+
+##Data Import and Cleaning
+
+The data for this analysis was obtained from the following locations:   
+Training Data: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv   
+Testing Data: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+Information about this data and it's source can be found here:   
+http://groupware.les.inf.puc-rio.br/har   
+
+```{r}
+##Data download and import.
+train_url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+test_url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+data_dir <- "./data"
+train_file <- paste(data_dir, "/pml-training.csv", sep = "")
+test_file <- paste(data_dir, "/pml-testing.csv", sep = "")
+
+#download.file(train_url,train_file)
+#download.file(test_url,test_file)
+
+training <- read.csv(train_file, stringsAsFactors = FALSE)
+testing <- read.csv(test_file, stringsAsFactors = FALSE)
+
+str(training)
+str(testing)
+
+```
+
