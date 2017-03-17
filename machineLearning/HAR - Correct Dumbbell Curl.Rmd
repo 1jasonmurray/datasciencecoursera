@@ -1,5 +1,5 @@
----
-title: "HAR - Correct Dumbbell Curl"
+ ---
+title: "HAR-Correct Dumbbell Curl"
 author: "Jason Murray"
 date: '2017-02-27'
 output: html_document
@@ -7,10 +7,10 @@ output: html_document
 
 ##Summary
 
-The purpose of this analysis is to find out whether we can identify not only the activity being performed from sensor data but whether it is being done correctly.  If not being done properly we would also like to identify in what way so proper feedback can be given to improve performace.  For this analysis we will use the weight lifting excersise dataset generously provided here: 
+The tracking of individual activity using various sensors has become quite common.  The purpose of this analysis is to find out whether we can identify not only the activity being performed from sensor data but whether it is being done correctly.  If not being done correctly we would also like to identify in what way so proper feedback can be given to improve performace.  For this we will use the weight lifting excersise dataset generously provided here: 
 http://groupware.les.inf.puc-rio.br/har   
 
-The dataset includes sensor data collected from the arm, forearm, belt, and dumbbell.  The particpant was asked to perform unilateral dumbbell bicep curl correctly as well as 4 different examples of incorrect movements while supervised by a trainer, for a total of 5 classes.  
+The dataset includes sensor data collected from the arm, forearm, belt, and dumbbell.  The particpants were asked to perform unilateral dumbbell bicep curl correctly as well as 4 incorrect movements while supervised by a trainer, for a total of 5 classes:     
 
 A - exactly according to specification   
 B - throwing the elbows to the front    
@@ -18,14 +18,15 @@ C - lifting the dumbbell halfway
 D - lowering the dumbbell halfway    
 E - Throwing the hips to the front   
 
-We will try out a few different models and evaluate which one provides the best fitting and then consider whether it is acccurate enough to be built into a feeedback system for users.   
+We will try out a few different models to try and classify the data into one of these 5 categories correctly and evaluate which one provides the best accuracy and consider whether it is acccurate enough to be built into a feeedback system for users.   
 
-##Data Import and Cleaning
+##Data Import and Cleaning   
 
 ####Required Libraries
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
 library(caret)
+library(caretEnsemble)
 library(parallel)
 library(doParallel)
 library(gbm)
@@ -40,17 +41,20 @@ Testing Data: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.cs
 
 
 ```{r}
-##Data download and import.
+##Data download and import
 train_url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 test_url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 
+##Define paths
 data_dir <- "./data"
 train_file <- paste(data_dir, "/pml-training.csv", sep = "")
 test_file <- paste(data_dir, "/pml-testing.csv", sep = "")
 
+##Commented after first download
 #download.file(train_url,train_file)
 #download.file(test_url,test_file)
 
+##Import data
 training <- read.csv(train_file, stringsAsFactors = FALSE)
 testing <- read.csv(test_file, stringsAsFactors = FALSE)
 
@@ -64,30 +68,31 @@ Right away we can see that are a lot of missing and NA values in our data.  Let'
 sum(complete.cases(training))
 ```
 
-Taking a quick look at the data it appears there are summary lines for each exercise window.  So the columns that are mostly imcomplete appear to be filled for these entries only.  There is a column labeled new_window, when set to yes it includes the summary data.  Let's double check this assumption by counting these lines.    
+Taking a quick look at the data it appears these are summary lines for each exercise window.  So the columns with missing data appear to be filled for these entries only and look like summeries for each completed movement.  There is a column labeled new_window, when set to yes it includes the summary data.  Let's double check this assumption by counting these lines.    
 
 ```{r}
 nw_yes <- training %>% filter(new_window=='yes')
 dim(nw_yes)
 ```
 
-So this corresponds exactly to our complete cases.  Looking at the testing data there are no summary lines.  Based on this I'm not sure if the summary values are going to be of value in building a model to make predictions.  Let's clean up our data by keeping only the columns that have values for all entries.  Let's also exclude anything that isn't likely to help us predict, including the index number, user_name, timestamps, and the window number.  The selection below pulls all the columns that are complete and relevant to our analysis.     
+So this corresponds exactly to our complete cases.  Looking at the testing data there are no summary lines.  Based on this I'm not sure if the summary values are going to be of value in building a model to make predictions.  Let's clean up our data by keeping only the columns that have values for all entries.  Let's exclude anything that isn't likely to help us predict, including the index number, user_name, timestamps, and the window number.  The selection below pulls all the columns that are complete and relevant to our analysis.     
 
 ```{r}
-training <- training %>% select(matches("^(roll|pitch|yaw|total_accel|gyros|accel|magnet|classe)"))
+training <- training %>% dplyr::select(matches("^(roll|pitch|yaw|total_accel|gyros|accel|magnet|classe)"))
 dim(training)
 sum(complete.cases(training))
 ```
 
-So all the lines are now complete and we have reduced the variables from 160 to 53.   
+So all the lines are now complete and we have reduced the columns from 160 to 53.   
 
-Let's change the classe variable to a factor since we are classifying and declare our data clean and ready for analysis.
+Let's change the classe variable to a factor since we are classifying and declare our data clean.
 
 ```{r}
 training$classe <- as.factor(training$classe)
 ```
-
-In this analysis we are looking to make final predictions on the test set once.  I would like to try out a few different models to pick the best one before trying to make this prediction.  In order to do that I'm going to split 30% of the training data out to use for validation testing of my models.
+   
+   
+In this analysis we are going to make final predictions on the test set once.  I would like to try out a few different models to pick the best one before trying to make this prediction.  In order to do that I'm going to hold 30% of the training data out to use for validation testing of my models.
 
 ```{r}
 inTrain <- createDataPartition(training$classe, p = 0.7, list = F)
@@ -108,39 +113,43 @@ registerDoParallel(cluster)
 
 ```
 
-For all of the models I will be using cross validation with 10 folds and 3 repeats.  We could potentially add few more repeats but I think this will add too much computation time and 3 repeats should be sufficient.  For each of the models I will also be searching for the best hyperparameters to use based on the dataset.  I have choosen random forest, gradient boosting, and svm for my models to test.  I will also combine them to see if I get better performance by stacking and will select the best of the 4 to generate my final test predictions.  I will rebuild the selected model(s) with all of the training data once I find the best one to maximize it's performance on the test data.   
+For all of the models I will be using cross validation with 10 folds and 3 repeats.  For each of the models I will also be searching for the best hyperparameters to use based on the dataset.  I have choosen random forest, stochoastic gradient boosting, and radial svm as my models to test.  I will select the best of the 3 to generate my final test predictions.  I will rebuild the selected model(s) with all of the training data once I find the best one to maximize it's performance on the test data.   
 
 
 ####Random Forest
 ```{r, cache=TRUE, message=FALSE, warning=FALSE}
 set.seed(42)
 rf_ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3, allowParallel=TRUE)
-tunegrid_rf <- expand.grid(.mtry=c(1:20))
+tunegrid_rf <- expand.grid(.mtry=c(6:12))
 model_rf <- train(classe ~ ., data=train, method='rf', preProcess = c("center", "scale"), trControl = rf_ctrl, tuneGrid = tunegrid_rf)
 ```
 
-On the first run I didn't set the tuneGrid and it selected random values for mtry across a wide range.  The model selected 2 as the best fit but I wanted to see if there was something better near 2 so I ran again with 1-20 as possible values.  Here is a graph of their accuracy as well as the model info.  
+On the first run I didn't set the tuneGrid and it selected random values for mtry across a wide range.  The model selected 2 as the best choice on the intial run but I wanted to see if there was something better near 2 so I ran again with 1-12 as possible values and it seemed to peak around 8 so I made another run with 6-12 as the range to see if I could find a better value.  Here is a graph of their accuracy as well as the model info.  
 
 ```{r}
 plot(model_rf)
 model_rf
 ```
 
-8 was selected as the best mtry parameter.  I will use a small range around 8 when building the final model.  
+The final selected mtry was 8.  It seem to peak there and gradually drop off afterwards so I think it's the best value to use.
 
 ```{r}
 model_rf$finalModel
 ```
 
-The performance of this model seems pretty good, we will see how it does on the validation set.   
+The performance of this model seems pretty good with an OOB error estimate of .53%, we will see how it does on the validation set.   
+
 
 #### Stochastic Gradient Boosting
 ```{r, cache=TRUE, message=FALSE, warning=FALSE}
 gbm_ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3, allowParallel=TRUE)
-gbm_grid <- expand.grid(interaction.depth = (1:8), shrinkage = .1, n.trees = (0:10)*50, n.minobsinnode = 10)
-model_gbm <- train(classe ~ ., data=train, method='gbm', preProcess = c("center", "scale"), trControl = gbm_ctrl, tuneGrid = gbm_grid)
+gbm_grid <- expand.grid(interaction.depth = c(15,20,25), shrinkage = .1, n.trees = c(400, 500, 600), n.minobsinnode = 10)
+model_gbm <- train(classe ~ ., data=train, method='gbm', preProcess = c("center", "scale"), trControl = gbm_ctrl, tuneGrid = gbm_grid, verbose = FALSE)
 ```
-I noticed during the first run of the gbm model with default values that both the interaction depth and the number of iterations had a positive influence on accuracy and were still growing.  So I made a second run with the values above to try and find better parameters. 
+I noticed during the first run of the gbm model with default values that both the interaction depth and the number of iterations had a positive influence on accuracy and were still growing with the default maximums of 3 and 150.  So I made a second run that went to a depth of 10 with 300 trees and it continued to grow.  It seemed that with each increase it got slightly more accurate but it was taking longer to run.  So the numbers above represent the practical limit of what I could run on my system.  I ran out of memory when testing with more depth or trees.  However, it does seem like there is additional information in each variable that increases accuracy.  It's possible with enought resources we could get an even more accurate model.  It's also possible we are overfitting but cross validation should help prevent this and it does appear to go up incrementally with each increase.  Perhaps because this is all sensor data there is a small amount of additional information in each variable that helps our predictions.        
+   
+   
+
 
 ```{r}
 plot(model_gbm)
@@ -166,13 +175,13 @@ plot(model_svm)
 model_svm
 ```
 
-As you can see the value selected was 512 which is what I will use in building the final model.
+There does appear to value here in in increasing the Cost value fairly high. The accuracy shoots up and quickly levels off and starts slowly decreasing.  Around 512 appears to be optimal.       
 
 ```{r}
 model_svm$finalModel
 ```
 
-The training error is farily low we will see how it performs on the validation data.  
+The accuracy is realtively high, we will see how it performs on the validation data.  
 
 
 ##Model Testing
@@ -180,27 +189,44 @@ The training error is farily low we will see how it performs on the validation d
 Now let's test our models against the validation data to see how they perform.  
 
 ```{r}
+##Make predictions
 predict_rf <- predict(model_rf,newdata = validation)
 predict_gbm <- predict(model_gbm,newdata = validation)
 predict_svm <- predict(model_svm,newdata = validation)
 
 confusionMatrix(predict_rf, validation$classe)
+```
+
+
+```{r}
 confusionMatrix(predict_gbm, validation$classe)
+```
+
+```{r}
 confusionMatrix(predict_svm, validation$classe)
 ```
 
 
-####Stacked model
-Let's put together a model stacking all 3 of these and see how it performs in comparison to the individual models.  
+
+##Model Selection, final build and testing
+After seeing how all 3 models performed I have selected the gradient boosting model.  Not only did it have the highest accuracy on the validation data but I think there is room for further improvement in the model with additional compute resources.  Before making my test predictions I will rebuild the model in order to include all of the training data.    
 
 ```{r}
-stacked <- data.frame(predict_rf, predict_gbm, predict_svm, classe = train$classe)
-
-stacked_ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3, allowParallel=TRUE)
-model_stacked <- train(classe ~ ., data=stacked, method='rf', trControl = stacked_ctrl)
-predict_stacked <- predict(model_stacked, newdata=validation)
+gbm_ctrl_final <- trainControl(method = "repeatedcv", number = 10, repeats = 3, allowParallel=TRUE)
+gbm_grid_final <- expand.grid(interaction.depth = 25, shrinkage = .1, n.trees = 600, n.minobsinnode = 10)
+model_gbm_final <- train(classe ~ ., data=training, method='gbm', preProcess = c("center", "scale"), trControl = gbm_ctrl_final, tuneGrid = gbm_grid_final, verbose = FALSE)
 ```
+
+####Testing
+Now that I have my final model I can make my predictions for the test data containing 20 samples.  
+
+```{r}
+predict_gbm_final <- predict(model_gbm_final,newdata = testing)
+```
+
+The score was 20/20 for the models predictions.  Given the high accuracy on the validation data this is not suprising.  
 
 ##Summary
 
+So it looks like the sensor data is sufficient to make accurate enough predictions of not only whether the excersise is being done correctly but to categorize the incorrect movement.  All 3 models seemed to perform well in the validation stage although the gbm method seemed to perform the best and had the potential to be even more accurate.  However, I ran out of memory on my system tring to build a deeper gbm model.  It would be interesting to see if with more resources were available what the limit of this is. It is possible that we are overfitting here but the cross validation should catch this.  In conclusion I think we could likely build a valid feedback system for users based on the sensor data.  
 
