@@ -5,7 +5,44 @@ date: '2017-03-22'
 output: html_document
 ---
 
+
+##Summary
+For this assigment I have choosen to create a map of candian earthquakes based on the data provided here:
+http://geoscan.nrcan.gc.ca/starweb/geoscan/servlet.starweb?path=geoscan/downloade.web&search1=R=296908
+
+
+##Data Import and cleaning
+
+#### Required Libraries
 ```{r}
-test_map <- leaflet() %>% addTiles()
+library(dplyr)
+library(leaflet)
+```
+
+
+First let's import the data.  I only care about the first 4 columns for my map so I'm going to drop the rest.
+```{r}
+data_dir <- "./data"
+data_file <- paste(data_dir, "/SHEEF2010.csv", sep = "")
+earthquakes <- read.csv(data_file, stringsAsFactors = FALSE)[,1:4]
+str(earthquakes)
+```
+
+Let's change the date to date format and create a column for labels
+```{r}
+## Convert to date
+earthquakes$Date <- strptime(earthquakes$Date,"%Y%m%d%H%M", tz='GMT')
+
+## Create labels
+labels <- paste("Mag", earthquakes$MW, "-", as.character(earthquakes$Date))
+earthquakes <- cbind(earthquakes, labels)
+```
+
+
+
+
+```{r}
+test_map <- leaflet(data = earthquakes) %>% addTiles() %>% addCircleMarkers(fillOpacity = .1, weight = 1, radius = (earthquakes$MW^2), label = labels)
+test_map
 ```
 
