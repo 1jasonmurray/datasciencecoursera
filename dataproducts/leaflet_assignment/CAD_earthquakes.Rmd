@@ -7,19 +7,23 @@ output: html_document
 
 
 ##Summary
-For this assigment I have choosen to create a map of candian earthquakes based on the data provided here:
+For this leaflet assigment I have choosen to create a map of candian earthquakes based on the data provided here:
 http://geoscan.nrcan.gc.ca/starweb/geoscan/servlet.starweb?path=geoscan/downloade.web&search1=R=296908
+<br>
+<br>
 
 
-##Data Import and cleaning
+###Data Import and cleaning
 
-#### Required Libraries
-```{r}
+####Required Libraries
+```{r,message=FALSE, warning=FALSE}
 library(dplyr)
 library(leaflet)
+library(RColorBrewer)
 ```
+<br>
 
-
+####Data Import
 First let's import the data.  I only care about the first 4 columns for my map so I'm going to drop the rest.
 ```{r}
 data_dir <- "./data"
@@ -27,22 +31,36 @@ data_file <- paste(data_dir, "/SHEEF2010.csv", sep = "")
 earthquakes <- read.csv(data_file, stringsAsFactors = FALSE)[,1:4]
 str(earthquakes)
 ```
+<br>
+
+####Cleaning
 
 Let's change the date to date format and create a column for labels
+
 ```{r}
 ## Convert to date
 earthquakes$Date <- strptime(earthquakes$Date,"%Y%m%d%H%M", tz='GMT')
 
-## Create labels
+## Create labels with magnitude and date
 labels <- paste("Mag", earthquakes$MW, "-", as.character(earthquakes$Date))
 earthquakes <- cbind(earthquakes, labels)
 ```
+<br>
 
+##Map Generation
+Now let's select a palette and build the map
 
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.cap="Canadian Earthquakes", fig.height=8, fig.width=10}
+##Create palette 
+pal <- colorNumeric("YlOrRd", domain = earthquakes$MW)
 
-
-```{r}
-test_map <- leaflet(data = earthquakes) %>% addTiles() %>% addCircleMarkers(fillOpacity = .1, weight = 1, radius = (earthquakes$MW^2), label = labels)
+##Generate map with markers and legends
+test_map <- leaflet(data = earthquakes) %>% 
+	addTiles() %>% 
+	addCircleMarkers(fillOpacity = .6, fillColor = ~pal(earthquakes$MW), weight = 0, radius = (earthquakes$MW^2)/2.3, label = labels) %>% 
+	addLegend(pal=pal, values=earthquakes$MW, opacity = 1, title = "Magnitude")
 test_map
 ```
+<br>
+<br>
 
