@@ -1,0 +1,89 @@
+---
+title: "Mushrooms"
+author: "Jason Murray"
+date: '2017-04-05'
+output: ioslides_presentation
+---
+
+##Summary
+
+For this plotly demo I decided to use the mushroom data provided at the UCI ML repository.  The original data can be found here:
+https://archive.ics.uci.edu/ml/datasets/Mushroom
+<br>
+<br>
+
+```{r,message=FALSE, warning=FALSE, echo=FALSE}
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(httpuv)
+library(caTools)
+library(webshot)
+```
+<br>
+
+## Data Import {.smaller .widescreen}
+First let's import the data. 
+```{r}
+data_dir <- "./data"
+data_file <- paste(data_dir, "/agaricus-lepiota.data.txt", sep = "")
+mushrooms <- read.csv(data_file)
+str(mushrooms)
+```
+
+
+## Cleaning {.smaller .widescreen}
+
+Need to add in the factor names to make it easier to add in the graph.
+
+```{r,message=FALSE, warning=FALSE}
+mushrooms$edible <- revalue(mushrooms$edible, c("e"="edible","p" = "poisonous"))
+mushrooms$cap.shape <- revalue(mushrooms$cap.shape, c("b"="bell","c"="conical","x"="convex","f"="flat","k"="knobbed","s"="sunken"))
+mushrooms$cap.surface <- revalue(mushrooms$cap.surface, c("f"="fibrous","g"="grooves","y"="scaly","s"="smooth"))
+mushrooms$cap.color <- revalue(mushrooms$cap.color, c("n"="brown","b"="buff","c"="cinnamon","g"="gray","r"="green","p"="pink","u"="purple","e"="red","w"="white","y"="yellow"))
+mushrooms$bruises <- revalue(mushrooms$bruises, c("t"="bruises","f"="no"))
+mushrooms$odor <- revalue(mushrooms$odor, c("a"="almond","l"="anise","c"="creosote","y"="fishy","f"="foul","m"="musty","n"="none","p"="pungent","s"="spicy"))
+mushrooms$gill.attachment <- revalue(mushrooms$gill.attachment, c("a"="attached","d"="descending","f"="free","n"="notched"))
+mushrooms$gill.spacing <- revalue(mushrooms$gill.spacing, c("c"="close","w"="crowded","d"="distant"))
+mushrooms$gill.size <- revalue(mushrooms$gill.size, c("b"="broad","n"="narrow"))
+mushrooms$gill.color <- revalue(mushrooms$gill.color, c("k"="black","n"="brown","b"="buff","h"="chocolate","g"="gray","r"="green","o"="orange","p"="pink","u"="purple","e"="red","w"="white","y"="yellow"))
+mushrooms$stalk.shape <- revalue(mushrooms$stalk.shape, c("e"="enlarging","t"="tapering"))
+mushrooms$stalk.root <- revalue(mushrooms$stalk.root, c("b"="bulbous","c"="club","u"="cup","e"="equal","z"="rhizomorphs","r"="rooted","?"="missing"))
+mushrooms$stalk.surface.above.ring <- revalue(mushrooms$stalk.surface.above.ring, c("f"="fibrous","y"="scaly","k"="silky","s"="smooth"))
+mushrooms$stalk.surface.below.ring <- revalue(mushrooms$stalk.surface.below.ring, c("f"="fibrous","y"="scaly","k"="silky","s"="smooth"))
+mushrooms$stalk.color.above.ring <- revalue(mushrooms$stalk.color.above.ring, c("n"="brown","b"="buff","c"="cinnamon","g"="gray","o"="orange","p"="pink","e"="red","w"="white","y"="yellow"))
+mushrooms$stalk.color.below.ring <- revalue(mushrooms$stalk.color.below.ring, c("n"="brown","b"="buff","c"="cinnamon","g"="gray","o"="orange","p"="pink","e"="red","w"="white","y"="yellow"))
+mushrooms$veil.type <- revalue(mushrooms$veil.type, c("p"="partial","u"="universal"))
+mushrooms$veil.color <- revalue(mushrooms$veil.color, c("n"="brown","o"="orange","w"="white","y"="yellow"))
+mushrooms$ring.number <- revalue(mushrooms$ring.number, c("n"="none","o"="one","t"="two"))
+mushrooms$ring.type <- revalue(mushrooms$ring.type, c("c"="cobwebby","e"="evanescent","f"="flaring","l"="large","n"="none","p"="pendant","s"="sheathing","z"="zone"))
+mushrooms$spore.print.color <- revalue(mushrooms$spore.print.color, c("k"="black","n"="brown","b"="buff","h"="chocolate","r"="green","o"="orange","u"="purple","w"="white","y"="yellow"))
+mushrooms$population <- revalue(mushrooms$population, c("a"="abundant","c"="clustered","n"="numerous","s"="scattered","v"="several","y"="solitary"))
+mushrooms$habitat <- revalue(mushrooms$habitat, c("g"="grasses","l"="leaves","m"="meadows","p"="paths","u"="urban","w"="waste","d"="woods"))
+
+```
+
+## Plots
+Let's see what the most prevelant charateristics are of poisonous mushrooms for each category.
+
+```{r, echo=FALSE}
+mushroomsPoison <- mushrooms %>% filter(edible=="poisonous") %>% select(-edible)
+
+toPrint <- htmltools::tagList()
+i=1
+for(name in mushroomsPoison){
+	toPlotly <- ggplot(mushroomsPoison,aes(x=name)) + geom_bar(fill="blue") + labs(title=names(mushroomsPoison[i]), x="")
+	toPrint[[i]] <- ggplotly(toPlotly)
+	i <- i+1
+	
+}
+toPrint
+
+#toPlotly <- ggplot(mushroomsPoison,aes(x=cap.color)) + geom_bar(fill="blue") + labs(title="Cap Color", x="")
+#test <- ggplotly(toPlotly)
+#test
+```
+
+
+
