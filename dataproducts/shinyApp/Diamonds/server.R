@@ -9,19 +9,31 @@
 
 library(shiny)
 library(ggplot2)
+library(caret)
 
-# Define server logic required to draw a histogram
+
+##Define server logic required to draw a histogram
 shinyServer(function(input, output) {
+
+  ##Build model for price prediction	   
+  model_glm <- reactive({
+    
+    train(price ~ carat + cut + color + clarity, data=diamonds, method='glm')
    
-  output$distPlot <- renderPlot({
-    
-    # generate bins based on input$bins from ui.R
-    x    <- faithful[, 2] 
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = 'darkgray', border = 'white')
-    
+  })
+  
+  output$price <- renderText({
+  	
+  	
+  	##Create data frame from new input
+  	inputData <- data.frame(carat=input$carat, cut=input$cut, color=input$color, clarity=input$clarity)
+  	
+  	##Predict price
+  	predPrice <- round(predict(model_glm(), newdata=inputData), digits = 2)
+  	
+  	##Output
+  	priceRec <- paste("Recommended price for this diamond is: $",predPrice, sep = "")
+  	print(priceRec)
   })
   
 })

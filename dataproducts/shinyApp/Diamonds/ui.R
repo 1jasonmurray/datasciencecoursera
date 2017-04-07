@@ -13,11 +13,13 @@ library(shiny)
 shinyUI(fluidPage(
   
   # Application title
-  titlePanel("Recommended Diamond Price"),
+  titlePanel("Diamond Price"),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
+    	"Usage: Select values below for the diamond you want to price.  Recommended price will appear in main panel", br(),br(),
+    	"Note:First load will take 20-30 seconds",br(),br(),
        sliderInput("carat",
                    "Number of carets",
                    min = .2,
@@ -25,9 +27,9 @@ shinyUI(fluidPage(
                    value = 1),
        radioButtons("cut",
        	    "Cut",
-       	    c('Fair' = 'F','Good' = 'G','Very Good' = 'VG','Premium' = 'P', 'Ideal' = 'I'),
+       	    c('Fair' = 'Fair','Good' = 'Good','Very Good' = 'Very Good','Premium' = 'Premium', 'Ideal' = 'Ideal'),
        	    inline = TRUE),
-       radioButtons("Color",
+       radioButtons("color",
        	     "Color",
        	     c('D' = 'D','E' = 'E','F' = 'F','G' = 'G', 'H' = 'H', 'I' = 'I', 'J' = 'J'),
        	     inline = TRUE),
@@ -39,7 +41,7 @@ shinyUI(fluidPage(
     
     # Show a plot of the generated distribution
     mainPanel(
-       plotOutput("distPlot")
+       textOutput("price")
     )
   )
 ))
