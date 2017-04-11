@@ -1,0 +1,28 @@
+---
+title: "Predicting Text"
+author: "Jason Murray"
+date: '2017-04-11'
+output: html_document
+---
+
+## Summary
+
+#### Data Import and Cleaning
+
+The data was downloaded from the coursera website:
+https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip
+
+
+```{r}
+##Directories and Files
+dataDir <- "/Users/Jason/final/en_US/"
+
+fileBlogs <- paste0(dataDir, "en_US.blogs.txt")
+fileNews <- paste0(dataDir, "en_US.news.txt")
+fileTwitter <- paste0(dataDir, "en_US.twitter.txt")
+
+
+
+
+```
+
